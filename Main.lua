@@ -146,11 +146,9 @@ local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Fun
 	local PredictedDrop = Functions:BulletDrop(CurrentCamera.CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
 	if not checkcaller() and Target and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
 		Args[9].CFrame = CFrame.new(Args[9].CFrame.Position, Prediction + Vector3.new(0, PredictedDrop, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
-
-		return Old(table.unpack(Args)); -- Returns Modified Arguments.
 	end;
 
-	return Old(...); -- returns Old Un Mdified Arguments.
+	return Old(table.unpack(Args)); -- Returns Modified Arguments.
 end)); 
 
 -- FOV
