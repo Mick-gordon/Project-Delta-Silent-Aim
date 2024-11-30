@@ -34,7 +34,7 @@ EnableButton.MouseButton1Down:Connect(function()
 	end;
 end);
 WallCheckButton.MouseButton1Down:Connect(function()
-	if SilentAim.Enabled then 
+	if SilentAim.WallCheck then 
 		SilentAim.WallCheck = false 
 		WallCheckButton.BackgroundColor3 = Color3.fromRGB(52, 52, 52);
 	else
@@ -44,7 +44,7 @@ WallCheckButton.MouseButton1Down:Connect(function()
 end);
 ShowFovButton.MouseButton1Down:Connect(function()
 	if SilentAim.ShowFov then 
-		SilentAim.WallCheck = false 
+		SilentAim.ShowFov = false 
 		ShowFovButton.BackgroundColor3 = Color3.fromRGB(52, 52, 52);
 	else
 		SilentAim.ShowFov = true 
@@ -61,7 +61,12 @@ HitScanButton.MouseButton1Down:Connect(function()
 	end;
 end);
 
-local Bullet = require(game:GetService("ReplicatedStorage").Modules.FPS.Bullet).CreateBullet;
+local Bullet;
+xpcall(function() 
+    Bullet = require(game:GetService("ReplicatedStorage").Modules.FPS.Bullet).CreateBullet; -- Getting The Module Were They Create The New Bullets.
+end,function() -- If It Errros Then Kick The Player
+    game:GetService("Players").localPlayer:kick("Executor Not Supported");
+end);
 
 local LocalPlayer      = game:GetService("Players").localPlayer;
 local CurrentCamera    = game:GetService("Workspace").CurrentCamera;
@@ -78,15 +83,15 @@ do
 	end;
 
 	function Functions:IsVisible(Part, IgnoreList)
-		local RayParams = RaycastParams.new();
+		local RayParams = RaycastParams.new(); -- Set Up The Raycast 
 		RayParams.FilterType = Enum.RaycastFilterType.Exclude;
-		RayParams.FilterDescendantsInstances = {IgnoreList, CurrentCamera};
+		RayParams.FilterDescendantsInstances = (Functions:IsAlive(LocalPlayer) and {IgnoreList, LocalPlayer.Character, CurrentCamera} or {IgnoreList, CurrentCamera}); -- Ignores What Ever Is In This Table
 		RayParams.IgnoreWater = true;
 
-		local Direction = (Part.Position - CurrentCamera.CFrame.Position).Unit * 5000; 
-		local ray = workspace:Raycast(CurrentCamera.CFrame.Position, Direction, RayParams);
+		local Direction = (Part.Position - CurrentCamera.CFrame.Position).Unit * 5000; -- The Direction No Way
+		local ray = workspace:Raycast(CurrentCamera.CFrame.Position, Direction, RayParams); -- Call The Raycast
 
-		if ray and ray.Instance and ray.Instance:IsDescendantOf(Part.Parent) then
+		if ray and ray.Instance and ray.Instance:IsDescendantOf(Part.Parent) then -- Check If It Is Returing Something And If It Is The Player If Not Then Return false.
 			return true;
 		end;
 
@@ -100,7 +105,7 @@ do
 			if Player ~= LocalPlayer and Functions:IsAlive(Player) then -- Checks If Player Is Not Local Player And If They Are Alive.
 				local HitPart = Player.Character:FindFirstChild(SilentAim.HitPart); -- Gets The Body Part Of The Player.
 				if HitPart then
-					if SilentAim.WallCheck ~= true or Functions:IsVisible(HitPart, CurrentCamera) then -- If Wall Check Selected Then It Will Check If The Player Is Visible.
+					if SilentAim.WallCheck ~= true or Functions:IsVisible(HitPart) then -- If Wall Check Selected Then It Will Check If The Player Is Visible.
 						local ScreenPosition, OnScreen = CurrentCamera:WorldToViewportPoint(HitPart.Position); -- Converts The 3D Postion To 2D.
 						local Distance = (UserInputService:GetMouseLocation()- Vector2.new(ScreenPosition.X, ScreenPosition.Y)).Magnitude; -- Gets The Distance Between The Mouse And The Player.
 						if OnScreen and Distance < Closest then  -- Checks If The Player Is On The Screen And Is The Closest Part.
@@ -141,10 +146,13 @@ end;
 local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Function And Uses newcclosure To Stop Some Dectections.
 	local Args          = {...}; -- Args That Can Be Modified.
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
-	local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[6])]; -- Grabs The Ammo Type That The Weapon You Are Using.
-	local Prediction    = Functions:Prediction(Target, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
-	local PredictedDrop = Functions:BulletDrop(CurrentCamera.CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
-	if not checkcaller() and Target and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
+
+	if Target and not checkcaller() and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
+	
+	    local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[6])]; -- Grabs The Ammo Type That The Weapon You Are Using.
+	    local Prediction    = Functions:Prediction(Target, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
+	    local PredictedDrop = Functions:BulletDrop(CurrentCamera.CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
+        
 		Args[9].CFrame = CFrame.new(Args[9].CFrame.Position, Prediction + Vector3.new(0, PredictedDrop, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
 	end;
 
@@ -162,11 +170,7 @@ RunService.Heartbeat:Connect(function() -- Loop To Change The Mouse Position And
 		SilentAim.Fov = tonumber(FovSizeText.Text);
 	end;
 
-	if not SilentAim.Enabled and not SilentAim.ShowFov then 
-		Fov.Visible = false; return
-	end;
-
-	Fov.Visible = true;
+	Fov.Visible = SilentAim.Enabled and SilentAim.ShowFov;
 
 	Fov.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y);
 	Fov.Radius   = SilentAim.Fov;
