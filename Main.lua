@@ -1,5 +1,5 @@
 -- I Made This Open Source For People To Learn Off.
-if not hookfunction or not newcclosure then  -- Checks If The Executor Has The Required Functions For The Script.
+if not hookfunction or not newcclosure or not getgc then  -- Checks If The Executor Has The Required Functions For The Script.
 	game:GetService("Players").localPlayer:kick("Executor Not Supported"); -- Kicks The Player If Not.
 end;
 
