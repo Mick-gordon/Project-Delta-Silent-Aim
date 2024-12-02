@@ -164,6 +164,7 @@ local Fov   = Drawing.new("Circle"); -- Simple Fov;
 Fov.Fill    = false;
 Fov.Corners = 1000;
 Fov.Color   = Color3.fromRGB(255, 255 ,255);
+Fov.Thickness = 1;
 RunService.Heartbeat:Connect(function() -- Loop To Change The Mouse Position And Size.
 
 	if not (FovSizeText.Text == "") then
