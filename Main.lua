@@ -120,25 +120,37 @@ do
 		return Part; -- Returns The Part.
 	end;
 
-	function Functions:Prediction(Part, Muzzlevelosity, Drag)
-		local Distance = (CurrentCamera.CFrame.Position - Part.Position).Magnitude; -- Gets The Distance.
-		local Time     = Distance / Muzzlevelosity; -- Calcualte How Long It Takes For The Bullet To Arive To The Position.
-		local Speed    = Muzzlevelosity - Drag * Muzzlevelosity^2 * Time^2; -- Calulates The Speed With The Drag As Drag Slows Shit Down.
-		Time           = Time + (Distance / Speed); -- Final Calculation For The Time.
+	function Functions:Prediction(Part, From, MuzzleVelocity, Drag)
+    	local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
+        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+    
+        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
+        local Time = (1 - math.exp(-DragEffect)) / Drag;
+        
+        if Time <= 0 then -- It Is Not Possible To Hit The Target.
+            return vector3.zero;
+        end;
 
 		return Part.CFrame.Position + (Part.Velocity * Time); -- Returns The Predicted Position Of The Body Part.
 	end;
 
-	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Drop)
-		local Distance = (From - To).Magnitude; 
-		local Time     = Distance / MuzzleVelocity;
-		local Speed    = MuzzleVelocity - Drag * MuzzleVelocity^2 * Time^2;
-		Time           = Time + (Distance / Speed); -- Same Shit As Prediction.
-		local vector   = Drop * Time^2; -- Calcualtes The Angle That Needs To Be Added To The Curent Position.
-
-		return vector; -- Returns How Much Will The Gun Be Needed To Hit The Target.
+	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Gravity) -- This Will Calculate The Vertical Displacement That Will Be Needed To Be Added To The Players Position.
+    	local Displacement = To - From;
+        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+    
+        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity;
+        local Time = (1 - math.exp(-DragEffect)) / Drag;
+        
+        if Time <= 0 then
+            return vector3.zero;
+        end;
+        
+        local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
+    
+        return VerticalDisplacement;
 	end;
-
+    
+    
 
 end;
 
@@ -148,12 +160,12 @@ local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Fun
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
 
 	if Target and not checkcaller() and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
-	
+	    
 	    local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[6])]; -- Grabs The Ammo Type That The Weapon You Are Using.
-	    local Prediction    = Functions:Prediction(Target, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
-	    local PredictedDrop = Functions:BulletDrop(CurrentCamera.CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
-        
-		Args[9].CFrame = CFrame.new(Args[9].CFrame.Position, Prediction + Vector3.new(0, PredictedDrop, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
+	    local Prediction    = Functions:Prediction(Target, Args[9].CFrame.Position, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
+	    local PredictedDrop = Functions:BulletDrop(Args[9].CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
+            
+		Args[9].CFrame = CFrame.new(Args[9].CFrame.Position, Prediction + Vector3.new(0, Tragector, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
 	end;
 
 	return Old(table.unpack(Args)); -- Returns Modified Arguments.
