@@ -121,33 +121,33 @@ do
 	end;
 
 	function Functions:Prediction(Part, From, MuzzleVelocity, Drag)
-    	local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
-        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+    		local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
+        	local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
     
-        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
-        local Time = (1 - math.exp(-DragEffect)) / Drag;
+        	local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
+        	local Time = (1 - math.exp(-DragEffect)) / Drag;
         
-        if Time <= 0 then -- It Is Not Possible To Hit The Target.
-            return vector3.zero;
-        end;
+        	if Time <= 0 then -- It Is Not Possible To Hit The Target.
+           	 return vector3.zero;
+        	end;
 
 		return Part.CFrame.Position + (Part.Velocity * Time); -- Returns The Predicted Position Of The Body Part.
 	end;
 
 	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Gravity) -- This Will Calculate The Vertical Displacement That Will Be Needed To Be Added To The Players Position.
-    	local Displacement = To - From;
-        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+    		local Displacement = To - From;
+        	local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
     
-        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity;
-        local Time = (1 - math.exp(-DragEffect)) / Drag;
+        	local DragEffect = Drag * HorizontalDistance / MuzzleVelocity;
+        	local Time = (1 - math.exp(-DragEffect)) / Drag;
         
-        if Time <= 0 then
-            return vector3.zero;
-        end;
+        	if Time <= 0 then
+            		return vector3.zero;
+        	end;
         
-        local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
+        	local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
     
-        return VerticalDisplacement;
+        	return VerticalDisplacement;
 	end;
     
     
