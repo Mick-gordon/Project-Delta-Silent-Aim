@@ -121,33 +121,33 @@ do
 	end;
 
 	function Functions:Prediction(Part, From, MuzzleVelocity, Drag)
-    		local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
-        	local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+        local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
+        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+
+        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
+        local Time = (1 - math.exp(-DragEffect)) / Drag;
     
-        	local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
-        	local Time = (1 - math.exp(-DragEffect)) / Drag;
-        
-        	if Time <= 0 then -- It Is Not Possible To Hit The Target.
-           	 return vector3.zero;
-        	end;
+        if Time <= 0 then -- It Is Not Possible To Hit The Target.
+            return vector3.zero;
+        end;
 
 		return Part.CFrame.Position + (Part.Velocity * Time); -- Returns The Predicted Position Of The Body Part.
 	end;
 
 	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Gravity) -- This Will Calculate The Vertical Displacement That Will Be Needed To Be Added To The Players Position.
-    		local Displacement = To - From;
-        	local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+        local Displacement = To - From;
+        local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
+
+        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity;
+        local Time = (1 - math.exp(-DragEffect)) / Drag;
     
-        	local DragEffect = Drag * HorizontalDistance / MuzzleVelocity;
-        	local Time = (1 - math.exp(-DragEffect)) / Drag;
-        
-        	if Time <= 0 then
-            		return vector3.zero;
-        	end;
-        
-        	local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
+        if Time <= 0 then
+            return vector3.zero;
+        end;
     
-        	return VerticalDisplacement;
+        local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
+
+        return VerticalDisplacement;
 	end;
     
     
@@ -161,11 +161,11 @@ local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Fun
 
 	if Target and not checkcaller() and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
 	    
-	    local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[6])]; -- Grabs The Ammo Type That The Weapon You Are Using.
-	    local Prediction    = Functions:Prediction(Target, Args[9].CFrame.Position, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
-	    local PredictedDrop = Functions:BulletDrop(Args[9].CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
+	    local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[7])]; -- Grabs The Ammo Type That The Weapon You Are Using.
+	    local Prediction    = Functions:Prediction(Target, Args[5].CFrame.Position, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
+	    local PredictedDrop = Functions:BulletDrop(Args[5].CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
             
-		Args[9].CFrame = CFrame.new(Args[9].CFrame.Position, Prediction + Vector3.new(0, Tragector, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
+		Args[5].CFrame = CFrame.new(Args[5].CFrame.Position, Prediction + Vector3.new(0, Tragector, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
 	end;
 
 	return Old(table.unpack(Args)); -- Returns Modified Arguments.
@@ -173,8 +173,8 @@ end));
 
 -- FOV
 local Fov   = Drawing.new("Circle"); -- Simple Fov;
-Fov.Fill    = false;
-Fov.Corners = 1000;
+Fov.Filled    = false;
+
 Fov.Color   = Color3.fromRGB(255, 255 ,255);
 Fov.Thickness = 1;
 RunService.Heartbeat:Connect(function() -- Loop To Change The Mouse Position And Size.
