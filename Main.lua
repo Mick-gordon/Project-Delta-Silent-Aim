@@ -1,5 +1,5 @@
 -- I Made This Open Source For People To Learn Off.
-if not hookfunction or not newcclosure or not getgc then  -- Checks If The Executor Has The Required Functions For The Script.
+if not hookfunction or not getgc then  -- Checks If The Executor Has The Required Functions For The Script.
 	game:GetService("Players").localPlayer:kick("Executor Not Supported"); -- Kicks The Player If Not.
 end;
 
@@ -155,7 +155,7 @@ do
 end;
 
 -- Silent Aim Hook 
-local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Function And Uses newcclosure To Stop Some Dectections.
+local Old; Old = hookfunction(Bullet, function(...) -- Hooks The Function And Uses newcclosure To Stop Some Dectections.
 	local Args          = {...}; -- Args That Can Be Modified.
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
 
@@ -169,7 +169,7 @@ local Old; Old = hookfunction(Bullet, newcclosure(function(...) -- Hooks The Fun
 	end;
 
 	return Old(table.unpack(Args)); -- Returns Modified Arguments.
-end)); 
+end); 
 
 -- FOV
 local Fov   = Drawing.new("Circle"); -- Simple Fov;
