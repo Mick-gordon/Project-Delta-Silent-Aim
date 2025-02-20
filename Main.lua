@@ -58,17 +58,25 @@ HitScanButton.MouseButton1Down:Connect(function()
 	end;
 end);
 
-local Bullet;
-xpcall(function() 
-    Bullet = require(game:GetService("ReplicatedStorage").Modules.FPS.Bullet); -- Getting The Module Were They Create The New Bullets.
-end,function() -- If It Errros Then Kick The Player
-    game:GetService("Players").localPlayer:kick("Executor Not Supported");
-end);
-
 local LocalPlayer      = game:GetService("Players").localPlayer;
 local CurrentCamera    = game:GetService("Workspace").CurrentCamera;
 local UserInputService = game:GetService("UserInputService");
 local RunService       = game:GetService("RunService");
+
+local Sucess, Bullet = pcall(require, game:GetService("ReplicatedStorage").Modules.FPS.Bullet);
+if not Sucess and getgc then 
+	for _,v in getgc() do
+		if typeof(v) == "function" and debug.info(v,"n") == "CreateBullet" then
+			Bullet = v;
+		end;
+	end;
+elseif not Sucess and not getgc then
+	return LocalPlayer:Kick("Executor Is Not Supported");
+end;
+
+if typeof(Bullet) == "table" then
+	Bullet = Bullet.CreateBullet;
+end;
 
 local Functions = { };
 do
@@ -118,20 +126,20 @@ do
 	end;
 
 	function Functions:Prediction(Part, From, MuzzleVelocity, Drag)
-        local Displacement = Part.Position - From; -- The Variables Are Self Expanitory.
+        local Displacement = Part.Position - From; 
         local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
 
-        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; -- Time = (1 - E^(-Drag * Distance / MuzzleVelocity)) / DragRate.
+        local DragEffect = Drag * HorizontalDistance / MuzzleVelocity; 
         local Time = (1 - math.exp(-DragEffect)) / Drag;
     
-        if Time <= 0 then -- It Is Not Possible To Hit The Target.
+        if Time <= 0 then 
             return vector3.zero;
         end;
 
-		return Part.CFrame.Position + (Part.Velocity * Time); -- Returns The Predicted Position Of The Body Part.
+		return Part.CFrame.Position + (Part.Velocity * Time); 
 	end;
 
-	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Gravity) -- This Will Calculate The Vertical Displacement That Will Be Needed To Be Added To The Players Position.
+	function Functions:BulletDrop(From, To, MuzzleVelocity, Drag, Gravity) 
         local Displacement = To - From;
         local HorizontalDistance = Vector3.new(Displacement.X, 0, Displacement.Z).Magnitude;
 
@@ -142,7 +150,7 @@ do
             return vector3.zero;
         end;
     
-        local VerticalDisplacement = 0.5 * Gravity * Time^2 -- kinematic Equation.
+        local VerticalDisplacement = 0.5 * Gravity * Time^2 
 
         return VerticalDisplacement;
 	end;
@@ -152,7 +160,7 @@ do
 end;
 
 -- Silent Aim Hook 
-local Old = Bullet.CreateBullet; Bullet.CreateBullet = function(...) 
+local Old = Bullet; Bullet = function(...) 
 	local Args          = {...}; -- Args That Can Be Modified.
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
 
