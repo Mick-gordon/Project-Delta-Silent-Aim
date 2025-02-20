@@ -1,4 +1,13 @@
 -- I Made This Open Source For People To Learn Off.
+-- Variables
+local LocalPlayer      = game:GetService("Players").localPlayer;
+local CurrentCamera    = game:GetService("Workspace").CurrentCamera;
+local UserInputService = game:GetService("UserInputService");
+local RunService       = game:GetService("RunService");
+
+if not hookfunction then
+	return LocalPlayer:Kick("Executor Is Not Supported");
+end;
 
 local SilentAim = { -- Settings
 	Enabled = false,
@@ -58,16 +67,12 @@ HitScanButton.MouseButton1Down:Connect(function()
 	end;
 end);
 
-local LocalPlayer      = game:GetService("Players").localPlayer;
-local CurrentCamera    = game:GetService("Workspace").CurrentCamera;
-local UserInputService = game:GetService("UserInputService");
-local RunService       = game:GetService("RunService");
-
 local Sucess, Bullet = pcall(require, game:GetService("ReplicatedStorage").Modules.FPS.Bullet);
 if not Sucess and getgc then 
 	for _,v in getgc() do
 		if typeof(v) == "function" and debug.info(v,"n") == "CreateBullet" then
 			Bullet = v;
+			break;
 		end;
 	end;
 elseif not Sucess and not getgc then
@@ -160,20 +165,18 @@ do
 end;
 
 -- Silent Aim Hook 
-local Old = Bullet; Bullet = function(...) 
-	local Args          = {...}; -- Args That Can Be Modified.
+local Old; Old = hookfunction(Bullet, function(d, p49, p50, p_u_51, p52, f, p53, p54, p55) 
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
 
 	if Target and not checkcaller() and SilentAim.Enabled then -- Checks If We Have A Target And Silent Aim Is Enabled Aslo checkcaller Is Used To Check If It Is The Executor Calling The Fucntion.
-	    
 	    local AmmoType      = game:GetService("ReplicatedStorage").AmmoTypes[tostring(Args[7])]; -- Grabs The Ammo Type That The Weapon You Are Using.
 	    local Prediction    = Functions:Prediction(Target, Args[5].CFrame.Position, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"));
 	    local PredictedDrop = Functions:BulletDrop(Args[5].CFrame.Position, Prediction, AmmoType:GetAttribute("MuzzleVelocity"), AmmoType:GetAttribute("Drag"), AmmoType:GetAttribute("ProjectileDrop"));
             
-		Args[5].CFrame = CFrame.new(Args[5].CFrame.Position, Prediction + Vector3.new(0, Tragector, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
+		p52.CFrame = CFrame.new(p52.CFrame.Position, Prediction + Vector3.new(0, Tragector, 0)); -- Modify The Arguments. Changes The Barrels CFrame To Be Aiming At The Player.
 	end;
 
-	return Old(table.unpack(Args)); -- Returns Modified Arguments.
+	return Old(d, p49, p50, p_u_51, p52, f, p53, p54, p55); 
 end); 
 
 -- FOV
