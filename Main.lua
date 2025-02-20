@@ -1,5 +1,5 @@
 -- I Made This Open Source For People To Learn Off.
-if not hookfunction or not getgc then  -- Checks If The Executor Has The Required Functions For The Script.
+if not getgc then  -- Checks If The Executor Has The Required Functions For The Script.
 	game:GetService("Players").localPlayer:kick("Executor Not Supported"); -- Kicks The Player If Not.
 end;
 
@@ -63,7 +63,7 @@ end);
 
 local Bullet;
 xpcall(function() 
-    Bullet = require(game:GetService("ReplicatedStorage").Modules.FPS.Bullet).CreateBullet; -- Getting The Module Were They Create The New Bullets.
+    Bullet = require(game:GetService("ReplicatedStorage").Modules.FPS.Bullet); -- Getting The Module Were They Create The New Bullets.
 end,function() -- If It Errros Then Kick The Player
     game:GetService("Players").localPlayer:kick("Executor Not Supported");
 end);
@@ -155,7 +155,7 @@ do
 end;
 
 -- Silent Aim Hook 
-local Old; Old = hookfunction(Bullet, function(...) -- Hooks The Function And Uses newcclosure To Stop Some Dectections.
+local Old = Bullet.CreateBullet; Bullet.CreateBullet = function(...) 
 	local Args          = {...}; -- Args That Can Be Modified.
 	local Target        = Functions:GetClosestToMouse(); -- Gets The Closest Person To Mouse.
 
